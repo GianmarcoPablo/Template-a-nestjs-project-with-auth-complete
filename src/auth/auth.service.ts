@@ -1,0 +1,57 @@
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateUserDto, LoginUserDto } from './dto';
+import * as bcrypt from "bcrypt"
+import { jwtPayload } from 'src/interfaces';
+
+@Injectable()
+export class AuthService {
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService
+
+  ) { }
+
+  async register(createAuthDto: CreateUserDto) {
+    const { email } = createAuthDto
+
+    const userExists = await this.prisma.user.findUnique({ where: { email } })
+    if (userExists) throw new ConflictException("User already exists")
+
+    const user = await this.prisma.user.create({
+      data: {
+        ...createAuthDto,
+        password: bcrypt.hashSync(createAuthDto.password, 10)
+      }
+    })
+
+    const { password, createdAt, updatedAt, ...restUser } = user
+
+    return {
+      ...restUser,
+      token: this.getJwtToken({ id: user.id })
+    }
+  }
+
+
+  async login(createAuthDto: LoginUserDto) {
+    const user = await this.prisma.user.findUnique({ where: { email: createAuthDto.email } })
+    if (!user) throw new NotFoundException('User not found');
+    const isPasswordValid = bcrypt.compareSync(createAuthDto.password, user.password)
+    if (!isPasswordValid) throw new BadRequestException("Invalid password")
+
+    const { password, createdAt, updatedAt, ...restUser } = user
+
+    return {
+      ...restUser,
+      token: this.getJwtToken({ id: user.id })
+    }
+  }
+
+  private getJwtToken(payload: jwtPayload) {
+    const token = this.jwtService.sign(payload)
+    return token
+  }
+}

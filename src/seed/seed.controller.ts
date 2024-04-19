@@ -5,7 +5,6 @@ import { SeedService } from './seed.service';
 export class SeedController {
   constructor(private readonly seedService: SeedService) { }
 
-  @Post()
   @Get()
   executeSeed() {
     return this.seedService.runSeed();

@@ -1,10 +1,6 @@
 import { IsBoolean, IsDate, IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
-enum Roles {
-    admin = 'admin',
-    user = 'user',
-    master = 'master',
-}
+
 
 export class CreateUserDto {
 
@@ -35,7 +31,7 @@ export class CreateUserDto {
 
     @IsOptional()
     @IsString()
-    role: Roles
+    role: string[];
 
     @IsOptional()
     @IsDate()

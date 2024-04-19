@@ -1,13 +1,8 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-enum Roles {
-  admin
-  user
-  master
+enum NotificationType {
+  NewFollower
+  NewReply
+  NewLike
+  Retweet
 }
 
 generator client {
@@ -19,15 +14,108 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// clome twiter
+
 model User {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  name         String
+  lastName     String
+  password     String
+  isActive     Boolean        @default(true)
+  isPremiun    Boolean        @default(false)
+  role         String[]       @default(["user"])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  Tweet        Tweet[]
+  Like         Like[]
+  Followers    Following[]    @relation("FollowersRelation")
+  Following    Following[]    @relation("FollowingRelation")
+  Retweet      Retweet[]
+  Comment      Comment[]
+  Notification Notification[]
+}
+
+model Tweet {
+  id           String         @id @default(uuid())
+  content      String         @db.VarChar(280)
+  user         User           @relation(fields: [userId], references: [id])
+  userId       String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  Like         Like[]
+  Retweet      Retweet[]
+  Comment      Comment[]
+  Notification Notification[]
+  hashtag      Hashtag[]
+}
+
+model Like {
   id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  lastName  String
-  password  String
-  isActive  Boolean  @default(true)
-  isPremiun Boolean  @default(false)
-  role      Roles    @default(user)
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  tweet     Tweet    @relation(fields: [tweetId], references: [id])
+  tweetId   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Following {
+  id         String   @id @default(uuid())
+  follower   User     @relation("FollowersRelation", fields: [followerId], references: [id])
+  followerId String
+  followed   User     @relation("FollowingRelation", fields: [followedId], references: [id])
+  followedId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Retweet {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  tweet     Tweet    @relation(fields: [tweetId], references: [id])
+  tweetId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String   @db.VarChar(280)
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  tweet     Tweet    @relation(fields: [tweetId], references: [id])
+  tweetId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  user      User             @relation(fields: [userId], references: [id])
+  userId    String
+  tweet     Tweet            @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+  tweetId   String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+model Hashtag {
+  id           String   @id @default(uuid())
+  name         String
+  hashtagCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  Tweet        Tweet?   @relation(fields: [tweetId], references: [id])
+  tweetId      String?
+  TrendTweet   Trend[]
+}
+
+model Trend {
+  id        String  @id @default(uuid())
+  name      String
+  hashtag   Hashtag @relation(fields: [hashtagId], references: [id])
+  hashtagId String
 }

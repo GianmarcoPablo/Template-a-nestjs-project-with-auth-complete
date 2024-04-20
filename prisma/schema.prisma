@@ -34,6 +34,7 @@ model User {
   Retweet      Retweet[]
   Comment      Comment[]
   Notification Notification[]
+  CommentTweet CommentTweet[]
 }
 
 model Tweet {
@@ -48,6 +49,7 @@ model Tweet {
   Comment      Comment[]
   Notification Notification[]
   hashtag      Hashtag[]
+  CommentTweet CommentTweet[]
 }
 
 model Like {
@@ -118,4 +120,15 @@ model Trend {
   name      String
   hashtag   Hashtag @relation(fields: [hashtagId], references: [id])
   hashtagId String
+}
+
+model CommentTweet {
+  id        String   @id @default(uuid())
+  content   String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  tweet     Tweet    @relation(fields: [tweetId], references: [id])
+  tweetId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

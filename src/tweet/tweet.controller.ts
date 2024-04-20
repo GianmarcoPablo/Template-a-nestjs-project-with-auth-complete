@@ -28,18 +28,8 @@ export class TweetController {
     return this.tweetService.findAll(paginationDto);
   }
 
-  @Get('by/user')
-  @Auth(ValidosRoles.user)
-  getTweetsByUser(
-    @GetUser() user: User
-  ) {
-    return this.tweetService.getTweetsByUser(user);
-  }
+ 
 
-  @Get('by/trends')
-  getTweetsByTrends() {
-    return this.tweetService.createTrend();
-  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {

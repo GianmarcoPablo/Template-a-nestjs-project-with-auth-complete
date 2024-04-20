@@ -5,12 +5,14 @@ import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { Cron, Interval } from '@nestjs/schedule';
+import { TrendService } from 'src/trend/trend.service';
 
 @Injectable()
 export class TweetService {
 
   constructor(
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    private readonly trendService: TrendService
   ) { }
 
   async create(createTweetDto: CreateTweetDto, user: User) {
@@ -72,6 +74,7 @@ export class TweetService {
     return tweet;
   }
 
+  // solo si el usuario es premium puede actualizar un tweet, pero tiene que ser el dueño del tweet
   update(id: number, updateTweetDto: UpdateTweetDto) {
     return `This action updates a #${id} tweet`;
   }
@@ -87,19 +90,6 @@ export class TweetService {
     });
 
     return 'Tweet eliminado';
-  }
-
-  async getTweetsByUser(user: User) {
-
-    const tweets = await this.prisma.tweet.findMany({
-      where: {
-        userId: user.id
-      }
-    })
-
-    if (tweets.length === 0) return 'No hay tweets para este usuario';
-
-    return tweets;
   }
 
   private async createHashtag(tweetId: string, hashtag: string) {
@@ -157,42 +147,9 @@ export class TweetService {
     return "Accion realizada con exito"
   }
 
-  async createTrend() {
-
-    // buscamos los hashtags mas usados
-    const hashtags = await this.prisma.hashtag.findMany({
-      orderBy: {
-        hashtagCount: 'desc'
-      },
-      take: 2
-    });
-
-
-    // los hashtags mas usados los vamos a guardar en una tabla de tendencias
-    for (const hashtag of hashtags) {
-      // si el hashtag ya existe en la db no hacemos nada
-      const existingTrend = await this.prisma.trend.findFirst({
-        where: {
-          hashtagId: hashtag.id
-        }
-      });
-      if (!existingTrend) {
-        await this.prisma.trend.create({
-          data: {
-            name: hashtag.name,
-            hashtagId: hashtag.id
-          }
-        });
-      } else {
-        return "Ya son tendencia"
-      }
-    }
-  }
-
   @Cron('0 0 * * *') // Ejecutar a la medianoche cada día
   async handleCron() {
-    await this.createTrend();
+    await this.trendService.createTrend();
   }
 
- 
 }

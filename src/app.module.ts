@@ -5,6 +5,9 @@ import { TweetModule } from './tweet/tweet.module';
 import { ConfigModule } from '@nestjs/config';
 import { CommonModule } from './common/common.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { TrendModule } from './trend/trend.module';
+import { CommentModule } from './comment/comment.module';
+import { ProfileModule } from './profile/profile.module';
 
 @Module({
 
@@ -14,7 +17,10 @@ import { ScheduleModule } from '@nestjs/schedule';
     AuthModule,
     SeedModule,
     TweetModule,
-    CommonModule
+    CommonModule,
+    TrendModule,
+    CommentModule,
+    ProfileModule
   ],
 })
 export class AppModule { }
